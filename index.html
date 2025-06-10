@@ -32,7 +32,6 @@
     <textarea id="outputText" placeholder="Transformed headers will appear here..." readonly></textarea>
 
     <script>
-        // Main transformation function
         function transformHeaders(addIP) {
             let input = document.getElementById("inputText").value;
             if (!input.trim()) {
@@ -48,6 +47,9 @@
 
             // Replace domain in From with [RDNS]
             output = output.replace(/(From:.*?@)[^\s>]+/gi, '$1[RDNS]');
+
+            // Replace domain in Sender with [RDNS]
+            output = output.replace(/(Sender:.*?<[^@]+)@[^>]+/gi, '$1@[RDNS]');
 
             // Insert [EID] randomly into Message-ID
             output = output.replace(/(Message-ID:\s*<)([^@]+)(@[^>]+>)/gi, function (_, prefix, id, suffix) {
@@ -92,7 +94,6 @@
             document.getElementById("outputText").value = '';
         });
 
-        // Feedback handler
         function showFeedback(button, message) {
             const original = button.textContent;
             button.textContent = message;
