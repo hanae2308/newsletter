@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Email Header Transformer</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; padding: 20px; }
+        textarea { width: 100%; height: 200px; margin: 10px 0; font-family: monospace; }
+        button { 
+            padding: 10px 15px; 
+            color: white; 
+            border: none; 
+            cursor: pointer; 
+            border-radius: 4px; 
+            margin-right: 10px; 
+            margin-bottom: 10px; 
+        }
+        #transformBtn { background: #0066ff; }
+        #ipBtn { background: #FF9800; }
+        #copyBtn { background: #4CAF50; }
+        #clearBtn { background: #f44336; }
+    </style>
+</head>
+<body>
+    <h1>Email Header Transformer</h1>
+    <textarea id="inputText" placeholder="Paste your email headers here..."></textarea>
+    <div>
+        <button id="transformBtn">Transform Headers</button>
+        <button id="ipBtn">Add [IP] to Subject</button>
+        <button id="copyBtn">Copy Output</button>
+        <button id="clearBtn">Clear All</button>
+    </div>
+    <textarea id="outputText" placeholder="Transformed headers will appear here..." readonly></textarea>
+
+    <script>
+        // Main transformation function
+        function transformHeaders(addIP) {
+            let input = document.getElementById("inputText").value;
+            if (!input.trim()) {
+                alert("Please paste email headers first!");
+                return;
+            }
+
+            let output = input;
+
+            // Remove Delivered-To and Return-Path
+            output = output.replace(/^Delivered-To:.*\n?/gim, '');
+            output = output.replace(/^Return-Path:.*\n?/gim, '');
+
+            // Replace domain in From with [RDNS]
+            output = output.replace(/(From:.*?@)[^\s>]+/gi, '$1[RDNS]');
+
+            // Insert [EID] randomly into Message-ID
+            output = output.replace(/(Message-ID:\s*<)([^@]+)(@[^>]+>)/gi, function (_, prefix, id, suffix) {
+                const pos = Math.max(1, Math.floor(Math.random() * id.length));
+                return prefix + id.slice(0, pos) + '[EID]' + id.slice(pos) + suffix;
+            });
+
+            // If Add [IP] button, append [IP] to Subject
+            if (addIP) {
+                output = output.replace(/^(Subject:.*?)$/im, function (_, subject) {
+                    return subject.includes('[IP]') ? subject : subject + ' [IP]';
+                });
+            }
+
+            document.getElementById("outputText").value = output;
+        }
+
+        // Button actions
+        document.getElementById("transformBtn").addEventListener("click", function () {
+            transformHeaders(false);
+            showFeedback(this, "Done! Headers Transformed");
+        });
+
+        document.getElementById("ipBtn").addEventListener("click", function () {
+            transformHeaders(true);
+            showFeedback(this, "Done! [IP] Added");
+        });
+
+        document.getElementById("copyBtn").addEventListener("click", function () {
+            const output = document.getElementById("outputText");
+            if (!output.value) {
+                alert("Nothing to copy!");
+                return;
+            }
+            output.select();
+            document.execCommand("copy");
+            showFeedback(this, "Copied!");
+        });
+
+        document.getElementById("clearBtn").addEventListener("click", function () {
+            document.getElementById("inputText").value = '';
+            document.getElementById("outputText").value = '';
+        });
+
+        // Feedback handler
+        function showFeedback(button, message) {
+            const original = button.textContent;
+            button.textContent = message;
+            setTimeout(() => button.textContent = original, 2000);
+        }
+    </script>
+</body>
+</html>
